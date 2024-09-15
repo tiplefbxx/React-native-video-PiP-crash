@@ -1,117 +1,76 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, {useCallback, useState, useEffect} from 'react';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {Button, SafeAreaView, StatusBar, StyleSheet, Text} from 'react-native';
+import Player from './src/components/Player';
+import {NavigationContainer} from '@react-navigation/native';
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const NativeNav = createNativeStackNavigator();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-/* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
- * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
+const WrapperApp = () => {
   return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
+    <NavigationContainer>
+      <NativeNav.Navigator
+        initialRouteName="Player"
+        screenOptions={{header: () => {}}}>
+        <NativeNav.Screen component={App} name="Player" />
+      </NativeNav.Navigator>
+    </NavigationContainer>
   );
 };
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
+const firstMedia = require('./broadchurch.mp4');
+const secondMedia = require('./billy.mp4');
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+const App = () => {
+  const [media, setMedia] = useState(firstMedia);
+  const [isCrashVariant, setIsCrashVariant] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const onEnd = useCallback(() => {
+    setMedia(secondMedia);
+
+    if (isCrashVariant) {
+      setIsLoading(true);
+    }
+  }, [isCrashVariant]);
+
+  useEffect(() => {
+    if (isLoading && isCrashVariant) {
+      setIsLoading(false);
+    }
+  }, [isLoading, isCrashVariant]);
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <SafeAreaView style={styles.wrapper}>
+      <StatusBar barStyle={'dark-content'} />
+      <Text style={styles.textStyle}>App will die when autoplay in PiP</Text>
+      <Text style={isCrashVariant ? styles.active : styles.disabled}>
+        {isCrashVariant ? 'ON' : 'OFF'}
+      </Text>
+      <Button
+        title={'Press me bro to setup crash behaviour'}
+        onPress={() => setIsCrashVariant(!isCrashVariant)}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+      {!isLoading && <Player src={media} onEnd={onEnd} />}
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  wrapper: {flex: 1},
+  textStyle: {
+    color: 'black',
+    paddingTop: 30,
+    fontSize: 20,
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  active: {
+    fontSize: 30,
+    color: 'green',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  disabled: {
+    fontSize: 30,
+    color: 'red',
   },
 });
 
-export default App;
+export default WrapperApp;
